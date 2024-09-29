@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fast-openai-api-proxy
+  annotations:
+    acme.cert-manager.io/http01-edit-in-place: 'true'
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-body-size: "5m"
+spec:
+  rules:
+    - host: ai-api.skunkworks.mylab.th-luebeck.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fast-openai-api-proxy
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - ai-api.skunkworks.mylab.th-luebeck.dev
+      secretName: fast-openai-api-proxy-ingress-cert

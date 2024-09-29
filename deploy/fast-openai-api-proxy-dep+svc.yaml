@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fast-openai-api-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fast-openai-api-proxy
+  template:
+    metadata:
+      labels:
+        app: fast-openai-api-proxy
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values:
+                      - ei-kratzke
+      containers:
+      - name: fast-openai-api-proxy
+        image: {{CI_REGISTRY_IMAGE}}/fast-openai-api-proxy:latest
+        ports:
+        - containerPort: 8000
+      imagePullSecrets:
+      - name: gitlab-registry-{{CI_PROJECT_ID}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fast-openai-api-proxy
+  labels:
+    app: fast-openai-api-proxy
+spec:
+  type: ClusterIP
+  selector:
+    app: fast-openai-api-proxy
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8000
